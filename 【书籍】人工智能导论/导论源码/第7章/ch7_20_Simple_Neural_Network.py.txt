@@ -1,0 +1,28 @@
+01   import tensorflow as tf
+02   from tensorflow.examples.tutorials.mnist import input_data
+03   import sys
+04   mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+05   
+06   x = tf.placeholder(¡°float¡±, [None, 784])
+07   W = tf.Variable(tf.zeros([784, 10]))
+08   b = tf.Variable(tf.zeros([10]))
+09   
+10   y = tf.nn.softmax(tf.matmul(x, W)+b)
+11   
+12   y_ = tf.placeholder(¡°float¡±, [None, 10])
+13   cross_entropy = -tf.reduce_sum(y_*tf.log(y))
+14   
+15   train_step = tf.train.GradientDescentOptimizer(0.01).\
+16              minimize(cross_entropy)
+17   init = tf.initialize_all_variables()
+18   sess = tf.Session()
+19   sess.run(init)
+20   
+21   for i in range(1000):
+22      batch_xs, batch_ys = mnist.train.next_batch(100)
+23      sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+24      if i % 200 == 199:
+25        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+26        accuracy = tf.reduce_mean(tf.cast(correct_prediction, ¡°float¡±))
+27        print sess.run(accuracy, feed_dict={x: mnist.test.images, y_: \
+28                  mnist.test.labels})

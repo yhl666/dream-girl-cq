@@ -1,0 +1,109 @@
+01   #!/usr/bin/env Python
+02   # coding=utf-8 
+03   #@Author: Alex Pan@From: CASIA@Date: 2017.03感谢作者Alex Pan
+04   
+05   import numpy as np
+06   uintType = np.uint8
+07   floatType = np.float32
+08   
+09   class HOP(object): 	# Hopfield 模型
+10     def __init__(self, N):
+11       self.N = N 	# Bit 维度
+12       self.W = np.zeros((N, N), dtype = floatType)	 # 权值矩阵
+13   
+14     # 计算  [factor]的Kronecker 平方积或使用 np.kron()
+15     def kroneckerSquareProduct(self, factor):
+16       ksProduct = np.zeros((self.N, self.N), dtype = floatType)
+17       for i in xrange(0, self.N): 	# 计算
+18         ksProduct[i] = factor[i] * factor
+19       return ksProduct
+20   
+21     def trainOnce(self, inputArray): 
+22     #一次训练一个单个稳定状态，更新权值矩阵
+23       mean = float(inputArray.sum()) / inputArray.shape[0]
+24     # 使用规范化学习
+25       self.W = self.W + self.kroneckerSquareProduct(inputArray - mean)\
+26              / (self.N * self.N) / mean / (1 - mean)
+27       index = range(0, self.N)	 # Erase diagonal self-weight
+28       self.W[index, index] = 0.
+29   
+30     def hopTrain(self, stableStateList):	# 整体训练
+31       # 把list预处理成数组的类型
+32       stableState = np.asarray(stableStateList, dtype = uintType)  
+33       if np.amin(stableState) <0 or np.amax(stableState) >1:	
+34         print'Vector Range ERROR!'
+35         return
+36       # 训练
+37       if len(stableState.shape) == 1 and stableState.shape[0] == self.N:
+38         print'stableState count: 1'
+39         self.trainOnce(stableState)
+40       elif len(stableState.shape) == 2 and stableState.shape[1] == self.N:
+41         print'stableState count: ' + str(stableState.shape[0])
+42         fori in xrange(0, stableState.shape[0]):
+43           self.trainOnce(stableState[i])
+44       else:
+45         print'SS Dimension ERROR! Training Aborted.'
+46       return
+47   
+48     print 'Hopfield Training Complete.'
+49   
+50     def hopRun(self, inputList):# 运行模型并产生结果
+51       inputArray = np.asarray(inputList, dtype = floatType)
+52   	 # 把list预处理成数组的类型
+53       if len(inputArray.shape) != 1 or inputArray.shape[0] != self.N:        
+54         print'Input Dimension ERROR! Runing Aborted.'
+55         return 
+56       matrix = np.tile(inputArray, (self.N, 1))
+57       matrix = self.W * matrix
+58       ouputArray = matrix.sum(1)
+59       m = float(np.amin(ouputArray))        # 规范化
+60       M = float(np.amax(ouputArray))
+61       ouputArray = (ouputArray - m) / (M - m)
+62       ouputArray[ouputArray <0.5] = 0.	
+63       ouputArray[ouputArray >0] = 1.	
+64       return np.asarray(ouputArray, dtype = uintType)
+65   
+66     def hopReset(self):	# 重设 HOP 至初始状态
+67       self.W = np.zeros((self.N, self.N), dtype = floatType)	 
+68   
+69     def printFormat(vector, NperGroup):	#打印输入向量
+70       string = ''
+71       for index in xrange(len(vector)):
+72         if index % NperGroup == 0:
+73           string += '\n'	
+74         if str(vector[index]) == '0':	 #  Image-Matrix OR Raw-String
+75           string += ' '
+76         elif str(vector[index]) == '1':
+77           string += '*'
+78         else:
+79           string += str(vector[index])
+80       string += '\n'
+81       print string
+82   
+83     def HOP_demo(): 		# DEMO of Hopfield Net
+84       zero = [0,1,1,1,0,1,0,0,0,1,1,0 0,0,1,1 0,0,0,1,1,0,0,0,1,0,1,1,1 0]
+85       one = [0,1,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0]
+86       two = [1,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0,1,1,0,0,1,0,0,0,0,1,1,1,1,1]
+87       hop = HOP(5 * 6)
+88       hop.hopTrain([zero, one, two])
+89       half_zero = [0,1,1,1,0,1,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+90       print 'Half-Zero:'
+91       printFormat(half_zero, 5)
+92       result = hop.hopRun(half_zero)
+93       print'Recovered:'
+94       printFormat(result, 5)
+95       half_two = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,0,1,1,1,1,1]
+96       print'Half-Two:'
+97       printFormat(half_two, 5)
+98       result = hop.hopRun(half_two)
+99       print'Recovered:'
+100      printFormat(result, 5)
+101      half_two = [1,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+102      print'Another Half-Two:'
+103      printFormat(half_two, 5)
+104      result = hop.hopRun(half_two)
+105      print'Recovered:'
+106      printFormat(result, 5)
+107   
+108     if__name__ == '__main__':
+109      HOP_demo()

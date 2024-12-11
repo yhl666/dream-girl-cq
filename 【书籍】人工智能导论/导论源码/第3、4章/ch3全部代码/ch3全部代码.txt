@@ -1,0 +1,440 @@
+#ch3-1
+print("Hello World!") 
+
+
+#ch3-2
+import os
+os.system("d:\hello.py")
+
+#ch3-3
+import keyword
+keyword.kwlist
+
+
+#ch3-4
+a=10
+a+=2       
+print(a)
+a*=10       
+print(a)
+print(a/5) 
+
+
+#ch3-5
+x,y,z={10,20,30}
+a,b,c={"data","yang","base"}
+print(x)
+print(y)
+print(z)
+print(a)
+print(b)
+print(c)
+
+#ch3-6
+x=y=z=100
+print(x)
+print(y)
+print(z)
+
+#ch3-7
+x=100
+if x>99:
+    x+=20
+print(x)
+
+#ch3-8
+flag = False
+name = 'luren'
+if name == 'Python':      
+    flag = True          
+    print('welcome boss')    
+else:
+    print(name) 
+
+#ch3-9
+score=85
+if score<60:
+    print("不及格")
+elif score<=70:
+    print("中等")
+elif score<85:
+    print("良好")
+else:
+    print("优秀")
+
+#ch3-10
+sum=0
+i=1
+while i<=100:
+    sum+=i
+    i+=1
+print(sum)
+
+#ch3-11
+for i in range(1,5):                 
+    print(i) 
+
+#ch3-12
+i=1
+sum=0
+for i in range(1,101):
+    if i%2==1:       
+        continue
+    sum+=i
+print(sum)
+
+#ch3-13
+x=1
+while True:
+    x+=1              
+    print(x)
+    if x>=5:        
+        break
+
+#ch3-14
+list1 = [1997, 2000, 'physics', 2017, 2018, 'chemistry', ]
+list2 = [1, 2, 3, 4, 5, 6, 7]
+print("list1[0]: ", list1[0])
+print("list1[5]: ", list1[5])
+print("list2[1:5]: ", list2[1:5])
+
+#ch3-15
+list = ['physics', 'chemistry', 1997, 2000]
+print ("Value available at index 2 : ")
+print(list[2])
+list[2] = 2018
+print( "New value available at index 2 : ")
+print(list[2])
+
+#ch3-16
+list = ['physics', 'chemistry', 1997, 2000]
+list.append(2018)                
+list1=["math","english"]
+list+=list1                    
+print(list)
+
+
+#ch3-17
+list = ['physics', 'chemistry', 1997, 2000,2018,1997,2000]
+del(list[2])
+list.remove(2000)
+print(list)
+
+#3-18
+L = ['Google', 'Runoob', 'Taobao']
+print(L[2])        
+print(L[-2])     
+print(L[1:])  
+
+#3-19
+tup = (1, 2, 3, 4, 5, 6, 7 )
+print(tup[4])
+print(tup[2:4])
+
+#3-20
+tup1 = (12,34,56,78)
+tup1[0]=100
+
+#3-21
+tup1 = (12,34,56,78)
+tup2=("abc","xyz")
+print(tup1+tup2)
+
+#3-22
+dict = {'abc': '123', 'xyz': '456'}
+print(dict['abc'])
+print(dict['xyz'])
+
+#3-23
+dict = {'abc': '123', 'xyz': '456'}
+dict['abc']=111              
+dict['def']='789'                  
+print(dict)
+
+#3-24
+dict = {'abc': '123', 'xyz': '456'}
+print(dict)
+dict = {'abc': '123', 'xyz': '456','abc':'789'}        
+print(dict)
+
+#3-25
+string="abcdefabccbaAbcCba123"
+print(string.capitalize())
+
+#3-26
+string="abcdefabccbaAbcCba123"
+print(string.count("abc",0,len(string)))
+
+
+#3-27
+string="abcdefabccbaAbcCba123"
+print(string.isalpha())
+
+#3-28
+string="abcdefabccbaAbcCba123"
+print(string.isalpha())
+
+#3-29
+string="abcdefabccbaAbcCba123"
+print(max(string))
+
+#3-30
+string="abcdef abc cbavAbc Cba 123"
+print(string.split(" "))
+
+#3-31
+string="abcdef abc cbavAbc Cba 123"
+print(string.swapcase())
+
+
+#3-32
+string="abcdef abc cbavAbc Cba 123"
+print(string.upper())
+
+
+#3-33
+def printme(str):
+    print(str)
+    return
+printme("abc")
+
+
+#3-34
+def func(num):
+    num+=5
+a=30
+func(a)
+print(a) 
+
+
+#3-35
+def sum(list):
+    total=0
+    for x in range(len(list)):
+        total+=list[x]
+    print(total)
+list=[10,20,30,40,50]
+sum(list)
+
+
+#3-36
+def print_dict(dict):
+    for (k,v) in dict.items():
+        print("dict[%s]=" %k,v)
+dict={"1":"abc","2":"def","3":"xyz"}
+print_dict(dict)
+
+#3-37
+def swap(list):
+     temp=list[0]
+     list[0]=list[1]
+     list[1]=temp
+list=[50,100]
+swap(list)                
+print(list)
+
+
+#3-38
+def say(message,times=1):
+    print(message*times)
+say("Python")                      
+say("china",3)
+
+
+#3-39
+def sum(a,b=20,c=30):       
+    total=a+b+c
+    return total
+print(sum(10))        
+print(sum(10,50))    
+print(sum(10,50,60))
+
+#3-40
+def func1(*t):            
+    total=0
+    for x in range(len(t)):
+        total+=t[x]
+    return total
+print(func1(10,20,30,40))
+
+
+#3-41
+def func3(**t):
+    print(t)
+func3(a=1,b=2,c=3)
+
+
+#3-42
+from numpy import *
+a1=mat([[3,4,5],[4,8,9]])
+a2=mat([[1,4,5,7],[2,6,4,6],[3,9,0,2]]);
+a3=a1*a2
+print(a3) 
+
+
+#3-43
+from numpy import *
+a1=mat([1,2]);
+a2=a1*2
+print(a2)
+
+
+#3-44
+from numpy import *
+a1=mat(eye(2,2)*0.5)
+print(a1)
+a2=a1.I      
+print(a2)
+
+
+#3-45
+from numpy import *
+a1=mat([[2,1,3],[0,5,9],[3,5,7]])
+a2=a1.T
+print(a2)
+
+
+#3-46
+from numpy import *
+a1=mat([[1,1],[2,3],[4,2]])
+print(a1)
+a2=a1.sum(axis=0)     
+print(a2)
+a3=a1.sum(axis=1)       
+print(a3)
+a4=sum(a1[1,:])    
+print(a4)
+print(a1.max())    
+a5=max(a1[:,1]) 
+print(a5)
+
+
+
+
+#ch3-47_GuessofNumber
+from random import randint
+def guess(maxValue=100, maxTimes=5):
+    value = randint(1,maxValue)     
+    for i in range(maxTimes):
+        prompt = 'Start to GUESS:' if i==0 else 'Guess again:'
+        try:
+            x = int(input(prompt))
+        except:
+            print('Must input an integer between 1 and ', maxValue)
+        else:
+            if x == value:                      
+                print('Congratulations!')
+                break
+            elif x > value:
+                    print('Too big')
+            else:
+                 print('Too little')   
+guess(98，34)
+
+
+
+#ch3-48_MatchString
+def  Rate(origin, userInput):
+    if not (isinstance(origin, str) and isinstance(userInput, str)):
+        print('The two parameters must be strings.')
+        return
+    if len(origin)<len(userInput):
+        print('Sorry. I suppose the second parameter string is shorter.')    
+        return
+    right = 0                  
+    for origin_char, user_char in zip(origin, userInput):
+        if origin_char==user_char:
+            right += 1
+    return right/len(origin)
+origin = 'Shandong Institute of Business and Technology'
+userInput = 'ShanDong institute of business and technolog'
+print(Rate(origin, userInput))  
+
+#ch3-49_SwitchPositions
+import random
+def demo(x, n):
+    if n not in x:
+        print(n, ' is not an element of ', x)
+        return
+    i = x.index(n) 
+    x[0], x[i] = x[i], x[0]
+    key = x[0]
+    i = 0
+    j = len(x) - 1
+    while i<j:
+        while i<j and x[j]>=key: 
+            j -= 1
+        x[i] = x[j] 
+        while i<j and x[i]<=key: 
+            i += 1
+        x[j] = x[i]
+    x[i] = key
+x =list(range(1, 10))
+random.shuffle(x)
+print(x)
+demo(x, 4)
+print(x)
+
+#ch3-50_BinarySearch
+from random import randint
+def binarySearch(lst, value):
+    start = 0
+    end = len(lst)
+    while start < end:         
+        middle = (start + end) // 2           
+        if value == lst[middle]:         
+            return middle        
+        elif value > lst[middle]:       
+            start = middle + 1        
+        elif value < lst[middle]:        
+            end = middle - 1    
+    return False                          
+lst = [randint(1,50) for i in range(20)]
+lst.sort()
+print(lst)
+result = binarySearch(lst, 30)
+if result!=False:
+    print('Success, its position is:',result)
+else:
+    print('Fail. Not exist.')
+
+
+#ch3-51_CalculationAchivement
+while True:
+    try:
+        n = int(input('请输入评委人数：'))
+        if n <= 2:
+            print('评委人数太少,必须多于2个人。')
+        else:
+            break 
+    except:
+        pass
+scores=[]
+for i in range(n):
+    score = input('请输入第{0}个评委的分数：'.format(i+1))
+    score = float(score)
+    scores.append(score)           
+highest = max(scores)
+lowest = min(scores)
+scores.remove(highest)
+scores.remove(lowest)
+finalScore = round(sum(scores)/len(scores), 2)
+formatter = '去掉一个最高分{0}\n去掉一个最低分{1}\n最后得分{2}'
+print(formatter.format(highest, lowest, finalScore))
+
+
+#ch3-52_ConversionofNumberSystems
+def int2base(n, base): 
+    result = []
+    div = n
+    while div != 0: 
+        div, mod = divmod(div, base)
+        result.append(mod)
+    result.reverse()    
+    result = ''.join(map(str, result))
+    return eval(result)
+print(int2base(80,2))
+print(int2base(80,8))
+print(int2base(80,16))
+print(int2base(80,13))
+

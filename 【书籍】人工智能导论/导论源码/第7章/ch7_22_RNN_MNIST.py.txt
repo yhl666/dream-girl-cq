@@ -1,0 +1,103 @@
+01   import tensorflow as tf
+02   import sys
+03   from tensorflow.examples.tutorials.mnist import input_data  
+04   mnist = input_data.read_data_sets('MNIST_data/', one_hot=True)
+05   
+06   # configuration  
+07   #       O * W + b -> 10 labels for each image, O[? 128], W[128 10], B[10]  
+08   #       ^ (O: output 28 vec from 28 vec input)  
+09   #                       |  
+10   #      +-+  +-+       +--+  
+11   #      |1|->|2|-> ... |28| n_steps = 28  
+12   #      +-+  +-+       +--+  
+13   #       ^    ^    ...  ^  
+14   #       |    |         |  
+15   # img1:[28] [28]  ... [28]  
+16   # img2:[28] [28]  ... [28]  
+17   # img3:[28] [28]  ... [28]  
+18   # ...
+19   # img128(batch_size=128)  
+20   # each input size =28  
+21   
+22   # hyperparameters  
+23   learning_rate = 0.001  
+24   training_iters = 100000  
+25   batch_size = 128  
+26   
+27   n_inputs = 28   #   
+28   n_steps = 28    #   
+29   n_hidden_units = 128   # neurons in hidden layer   
+30   n_classes = 10      # MNIST classes (0-9 digits)  
+31   
+32   # X, input shape: (batch_size, n_steps, n_inputs)  
+33   x = tf.placeholder(tf.float32, [None, n_steps, n_inputs])  
+34   #y, shape:(batch_size,n_classes)  
+35   y = tf.placeholder(tf.float32, [None, n_classes])  
+36   
+37   # Define weights and biases  
+38   #in:  
+39   #out:  
+40   weights = { \ 
+41       # (28, 128)  
+42       'in': tf.Variable(tf.random_normal([n_inputs, n_hidden_units])), \ 
+43       # (128, 10)  
+44       'out': tf.Variable(tf.random_normal([n_hidden_units, n_classes]))  \
+45   }  
+46   biases = { \ 
+47       # (128, )
+48       'in': tf.Variable(tf.constant(0.1, shape=[n_hidden_units, ])), \ 
+49       # (10, )
+50       'out': tf.Variable(tf.constant(0.1, shape=[n_classes, ])) \ 
+51   }  
+52   
+53   def RNN(X, weights, biases):  
+54   # hidden layer for input to cell  
+55   ########################################  
+56   # X (128 batch,28 steps,28 inputs) ==> (128 batch * 28 steps, 28
+57   #   inputs)  
+58       X = tf.reshape(X, [-1, n_inputs])  
+59       # into hidden  
+60       # X_in =[128 b*28 s,28 i]*[28 i,128 h]=[128 b * 28 s, 128 h]  
+61       X_in = tf.matmul(X, weights['in']) + biases['in']  
+62       # X_in ==> (128 batch, 28 steps, 128 hidden)  
+63       X_in = tf.reshape(X_in, [-1, n_steps, n_hidden_units])  
+64   # cell
+65      # basic LSTM Cell.
+66      cell = tf.contrib.rnn.BasicLSTMCell\
+67       (n_hidden_units,forget_bias=1.0,state_is_tuple=True)
+68      # lstm cell is divided into two parts (c_state, h_state)  
+69      init_state = cell.zero_state(batch_size, dtype=tf.float32)  
+70      # dynamic_rnn receive Tensor (batch, steps, inputs)
+71      # time_major=False  
+72      outputs, final_state = tf.nn.dynamic_rnn\
+73      (cell, X_in, initial_state=init_state, time_major=False)  
+74   
+75       # hidden layer for output as the final results  
+76       # unpack to list [(batch, outputs)..] * steps
+77       # permute time_step_size and batch_size,[28, 128, 28]
+78       outputs = tf.unstack(tf.transpose(outputs, [1,0,2]))
+79       #  shape = (128, 10)  
+80       results = tf.matmul(outputs[-1], weights['out']) + biases['out']  
+81       return results  
+82   
+83   pred = RNN(x, weights, biases)  
+84   cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits\
+85   (logits=pred, labels=y))  
+86   train_op = tf.train.AdamOptimizer(learning_rate).minimize(cost)  
+87   
+88   correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))  
+89   accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))  
+90   
+91   with tf.Session() as sess:  
+92       init = tf.global_variables_initializer()
+93       
+94       sess.run(init)  
+95       step = 0  
+96       while step * batch_size < training_iters:  
+97           batch_xs, batch_ys = mnist.train.next_batch(batch_size)  
+98           batch_xs = batch_xs.reshape([batch_size, n_steps, n_inputs])  
+99            
+100          sess.run([train_op], feed_dict={x: batch_xs,y: batch_ys,})  
+101          if step % 130 == 0:  
+102             print(sess.run(accuracy, feed_dict={x: batch_xs,y: batch_ys,}))  
+103          step += 1

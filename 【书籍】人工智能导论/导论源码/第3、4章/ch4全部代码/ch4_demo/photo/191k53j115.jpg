@@ -1,0 +1,21 @@
+		<HTML>
+			<HEAD>
+				<TITLE>色影无忌 - 系统信息</TITLE>
+				<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+				<style type=text/css>
+					body{font-family:tahoma;}
+					#all A:active {COLOR:;}
+					#all A:visited {COLOR:{visitedcolor};}
+					#all A:hover {COLOR:;}
+					#all A:link {COLOR:;}
+				</style>
+			</HEAD>
+			<body bgcolor=#dddfd0 text=#000000 id=all>
+				<table align=center width=90% cellpadding=4>
+					<tr>
+						<td align=center width=145 bgcolor=#e3e5da>色影无忌<br><br>系统信息</td>
+						<td align=center bgcolor=#d7d9ce>抱歉，您提交的网址不正确，如有疑问请发邮件给系统管理员： webmaster@xitek.com <br><br>谢谢您！</td>
+					</tr>
+				</table>
+			</body>
+		</html>

@@ -1,0 +1,50 @@
+01   import tensorflow as tf
+02   
+03   # 训练数据
+04   X = [[0,0],[0,1],[1,0],[1,1]]
+05   Y = [[0],[0],[0],[1]]
+06   
+07   # 定义网络结构
+08   N_INPUT_NODES = 2  # 2个输入节点
+09   N_OUTPUT_NODES = 1 # 1个输出节点
+10   
+11   # 定义训练迭代次数
+12   N_STEPS = 20000    # 执行20000次训练
+13   N_EPOCH = 1000     # 每隔1000次，输出一次训练结果
+14   
+15   # 定义学习率，即每次递减下降的大小
+16   LEARNING_RATE = 0.02
+17   # 定义接收训练数据的占位符
+18   x_ = tf.placeholder(tf.float32,shape=[len(X),N_INPUT_NODES],\
+19        name="x-input") # 4*2的矩阵
+20   y_ = tf.placeholder(tf.float32,shape=[len(Y),N_OUTPUT_NODES],\
+21        name="y-input") # 4*1的矩阵
+22   # 定义权重和偏执项
+23   weight= tf.Variable(tf.random_uniform\
+24          ([N_INPUT_NODES,N_OUTPUT_NODES],-1,1),
+25   name="weight")
+26   bias = tf.Variable(tf.zeros([N_OUTPUT_NODES]),name="bias")
+27   # 定义前向传播函数
+28   output = tf.sigmoid(tf.matmul(x_,weight)+bias)
+29   
+30   # 定义损失函数（最小均方差），来描述预测值和真实值之间的差距
+31   cost = tf.reduce_mean(tf.square(Y-output))
+32   
+33   # 定义反向传播函数，即使用梯度下降的方法，求解损失函数的最小值
+34   train = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cost)
+35   
+36   # 初始化变量
+37   init = tf.initialize_all_variables()
+38   sess = tf.Session()
+39   sess.run(init)
+40   
+41   # 开始训练过程
+42   for i in range(N_STEPS):
+43       # 执行训练函数，将训练数据feed到模型中
+44       sess.run(train,feed_dict={x_:X,y_:Y})
+45       if i % N_EPOCH == 0:
+46           # 每隔N_EPOCH轮，输出一次训练结果
+47           print 'SETPS: ',i,' cost: ',sess.run(cost,feed_dict={x_:X,y_:Y})
+48   
+49   # 训练结束，执行一次预测过程，并查看结果
+50   print 'output: ',sess.run(output,feed_dict={x_:X,y_:Y})

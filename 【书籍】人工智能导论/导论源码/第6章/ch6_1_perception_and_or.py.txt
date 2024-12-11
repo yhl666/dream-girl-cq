@@ -1,0 +1,84 @@
+01   #!/usr/bin/env Python
+02   # coding=utf-8
+03   
+04   class  Perceptron(object):	
+05     def __init__(self, input_num, activator):
+06     #初始化感知器，设置输入参数的个数，以及激活函数。
+07       self.activator = activator
+08       self.weights = [0.0 for _ in range(input_num)]	
+09       self.bias = 0.0
+10   
+11     #打印学习到的权重、偏置项
+12     def __str__(self):	
+13       return'weights\t:%s\nbias\t:%f\n' % (self.weights, self.bias)
+14   
+15     #输入向量，输出感知器的计算结果
+16     def predict(self, input_vec):
+17       return self.activator(reduce(lambda a, b: a + b,\
+18         map(lambda (x, w): x * w,zip(input_vec, self.weights)), 0.0) + \self.bias)
+19         
+20     #输入训练数据：
+21     def train(self, input_vecs, labels, iteration, rate):	
+22       for i in range(iteration):    
+23         self._one_iteration(input_vecs, labels, rate)
+24        
+25     #迭代，把所有的训练数据过一遍
+26     def _one_iteration(self, input_vecs, labels, rate):	
+27       samples = zip(input_vecs, labels)  
+28       for(input_vec, label) in samples:
+29         output = self.predict(input_vec)  
+30       self._update_weights(input_vec, output, label, rate) 
+31        
+32     #更新权重及偏置的值
+33     def _update_weights(self, input_vec, output, label, rate):     
+34        delta = label - output     	
+35        self.weights = map(lambda (x, w): w + rate * delta * x,zip(input_vec, \          
+36        self.weights))
+37        self.bias += rate * delta 
+38   
+39     #定义激活函数f
+40     def f(x):     
+41        return 1 if x >0 else 0 	
+42       
+43     #基于and真值表构建训练数据
+44     def get_training_dataset_and():	
+45        input_vecs = [[1, 1], [0, 0], [1, 0], [0, 1]]          
+46        labels_and = [1, 0, 0, 0]         
+47        return input_vecs, labels_and
+48   
+49     #基于or真值表构建训练数据
+50     def get_training_dataset_or():        	
+51        input_vecs = [[1, 1], [0, 0], [1, 0], [0, 1]]         
+52        labels_or = [1, 0, 1, 1]        
+53        return input_vecs, labels_or
+54    
+55     #使用and真值表训练感知器
+56     def train_and_perceptron():	
+57        p = Perceptron(2, f)         
+58        input_vecs, labels = get_training_dataset_and()        
+59        p.train(input_vecs, labels, 10, 0.1)
+60        return p
+61   
+62     #使用or真值表训练感知器
+63     def train_or_perceptron():	
+64        p = Perceptron(2, f)         
+65        input_vecs, labels = get_training_dataset_or()         
+66        p.train(input_vecs, labels, 10, 0.1)
+67        return p
+68   
+69     # 测试
+70     if __name__ == '__main__':	
+71        and_perception = train_and_perceptron()
+72        printand_perception
+73        print'1 and 1 = %d' % and_perception.predict([1, 1])
+74        print'0 and 0 = %d' % and_perception.predict([0, 0])
+75        print'1 and 0 = %d' % and_perception.predict([1, 0])
+76        print'0 and 1 = %d' % and_perception.predict([0, 1])
+77         
+78        print' '
+79        or_perception = train_or_perceptron()
+80        printor_perception
+81        print'1 or 1 = %d' % or_perception.predict([1, 1])
+82        print'0 or 0 = %d' % or_perception.predict([0, 0])
+83        print'1 or 0 = %d' % or_perception.predict([1, 0])
+84        print'0 or 1 = %d' % or_perception.predict([0, 1])

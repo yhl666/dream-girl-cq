@@ -1,0 +1,20 @@
+01   import tensorflow as tf
+02   from tensorflow.examples.tutorials.mnist import input_data
+03   import matplotlib.pyplot as plt
+04   mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+05   
+06   fig, ax = plt.subplots(\
+07       nrows=5, \
+08       ncols=5, \
+09       sharex=True, \
+10       sharey=True, ) 
+11   
+12   ax = ax.flatten()
+13   for i in range(25):
+14      img = mnist.train.images[(mnist.train.labels == 1)[:,7]][i].reshape(28, 28)
+15      ax[i].imshow(img, cmap='Greys', interpolation='nearest')
+16   
+17   ax[0].set_xticks([])
+18   ax[0].set_yticks([])
+19   plt.tight_layout()
+20   plt.show()

@@ -1,0 +1,73 @@
+01   import requests
+02   import json
+03   import base64
+04   import wave
+05   from pydub import AudioSegment
+06   from aip import AipSpeech
+07   import io
+08   
+09   class BaiduRest:
+10       def __init__(self, cu_id, api_key, api_secret):
+11           #获取token的网络接口
+12           self.token_url = "https://openapi.baidu.com/oauth/2.0/token"
+13           #语音识别网络接口
+14           self.upvoice_url = 'http://vop.baidu.com/server_api'
+15           self.cu_id = cu_id
+16           self.getToken(api_key, api_secret)
+17           return
+18   
+19       def getToken(self, api_key, api_secret): #token数据
+20          data={'grant_type':'client_credentials','client_id':api_key,\
+21           'client_secret':api_secret}
+22           r=requests.post(self.token_url,data=data)
+23           Token=json.loads(r.text)
+24           self.token_str = Token['access_token']
+25   
+26       def getText(self, filename): #语音数据格式
+27          data = {"format":"wav","rate":16000,\
+28          "channel":1,"token":self.token_str,"cuid":self.cu_id,"lan":"zh"}
+29           #打开wav音频文件读取音频数据并调用语音识别接口进行识别
+30           wav_fp = open(filename,'rb')
+31           voice_data = wav_fp.read()
+32           data['len'] = len(voice_data)
+33           data['speech'] = base64.b64encode(voice_data).decode('utf-8')
+34           post_data = json.dumps(data)
+35           r=requests.post(self.upvoice_url,data=bytes(post_data))
+36           #获取识别得到的文本
+37           return r.json()["result"][0].encode('utf-8')
+38   
+39       def ConvertToWav(self,filename,wavfilename):
+40           #打开mp3文件并读取数据
+41           fp=open(filename,'rb')
+42           data=fp.read()
+43           fp.close()
+44           #获取音频字节流数据
+45           aud=io.BytesIO(data)
+46           sound=AudioSegment.from_file(aud,format='mp3')
+47           raw_data = sound._data
+48           #将mp3音频数据转换为wav音频数据
+49           l=len(raw_data)
+50           f=wave.open(wavfilename,'wb')
+51           f.setnchannels(1)
+52           f.setsampwidth(2)
+53           f.setframerate(16000)
+54           f.setnframes(l)
+55           f.writeframes(raw_data)
+56           f.close()
+57           return wavfilename
+58   
+59   if __name__ == "__main__": #语音合成
+60      client = AipSpeech('语音合成应用的App ID','\
+61       语音合成应用的API Key','语音合成应用的Secret Key')
+62       client.setSocketTimeoutInMillis(60000)
+63       text = raw_input()
+64       result = client.synthesis(text, 'zh', 1, )
+65       # 将结果写入mp3音频文件
+66       with open('audio.mp3', 'wb') as f:
+67           f.write(result)
+68       #语音识别
+69       api_key = "语音识别应用的API Key "
+70       api_secret = "语音合成应用的Secret Key "
+71       #初始化百度语音识别类的实例
+72       bdr = BaiduRest("test_Python", api_key, api_secret)
+73       print(bdr.getText(bdr.ConvertToWav("audio.mp3", "audio.wav")))

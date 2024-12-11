@@ -1,0 +1,28 @@
+01   import tensorflow as tf
+02   import numpy as np
+03   
+04   # create data
+05   x_data = [21.5188,29.6623,38.5208,46.2798,53.4075,59.6218,64.3324,73.7624,\
+06   79.5243,86.9106]
+07   y_data = [1.0235,1.3757,1.6384,2.1127,2.3912,2.8319,3.1755,3.5224,8.2856,\
+08   3.8784]   
+09   ### create tensorflow structure start ###
+10   Weights = tf.Variable(tf.random_uniform([1], -1.0, 1.0))
+11   biases = tf.Variable(tf.zeros([1]))
+12   
+13   y = Weights * x_data + biases
+14   
+15   loss = tf.reduce_mean(tf.square(y - y_data))
+16   optimizer = tf.train.GradientDescentOptimizer(0.0002)
+17   train = optimizer.minimize(loss)
+18   
+19   init = tf.initialize_all_variables()
+20   ### create tensorflow structure end ###
+21   
+22   sess = tf.Session()
+23   sess.run(init)   # Very important
+24   
+25   for step in range(200001):
+26      sess.run(train)
+27      if step % 40000 == 0:
+28         print step, sess.run(Weights), sess.run(biases)

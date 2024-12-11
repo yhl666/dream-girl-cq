@@ -1,0 +1,101 @@
+01      #!/usr/bin/env Python
+02      #coding=utf-8
+03      import numpy as np
+04      from sklearn import datasets, linear_model
+05      import matplotlib.pyplot as plt
+06      from matplotlib.colors import  ListedColormap
+07      class Config:
+08          nn_input_dim = 2	    #输入的维度
+09          nn_output_dim = 2  	#输出的维度
+10          epsilon = 0.01		#梯度下降参数：学习率0.01
+11          reg_lambda = 0.01	#正则化长度
+12   
+13      def generate_data():		#Scikit-learn中的函数，产生200个数据并显示
+14          np.random.seed(0)
+15          X, y = datasets.make_moons(200, noise=0.20)
+16          model = build_model(X, y, 0)
+17          visualize(X, y, model)
+18          returnX, y
+19   
+20      def visualize(X, y, model):		#结果可视化
+21          plot_decision_boundary(lambda x:predict(model,x), X, y)
+22          plt.title("Hidden Layer size 3")
+23   
+24      def plot_decision_boundary(pred_func, X, y):	#绘制数据点以及边界
+25          # 设置最小最大值并填充
+26          x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+27          y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+28          h = 0.01
+29          # 生成数据网格
+30          xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min,\
+31                 y_max, h))
+32   	    # 预测整个数据网格上的数据
+33          Z = pred_func(np.c_[xx.ravel(), yy.ravel()])
+34          Z = Z.reshape(xx.shape)
+35   	    # 绘制数据点以及边界
+36          colors=('white','lightgray')    
+37          camp=ListedColormap(colors)    
+38          plt.contourf(xx, yy, Z, cmap=camp)
+39          #plt.contourf(xx, yy, Z, cmap=plt.cm.Spectral)
+40          colors = ('lightgray', 'black')    
+41          camp = ListedColormap(colors)        
+42          plt.scatter(X[:, 0], X[:, 1], c=y, cmap=camp)  
+43          #plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Spectral)
+44          plt.show()
+45   
+46      def predict(model, x):	#预测，前向传播过程
+47          W1, b1, W2, b2 = model['W1'], model['b1'], model['W2'], model['b2']
+48          z1 = x.dot(W1) + b1
+49          a1 = np.tanh(z1)
+50          z2 = a1.dot(W2) + b2
+51          exp_scores = np.exp(z2)
+52          probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+53          return np.argmax(probs, axis=1)
+54  
+55      #学习神经网络的参数以及建立模型
+56      # - nn_hdim: 隐藏层的节点数
+57      # - num_passes: 梯度下降法使用的样本数量
+58      def build_model(X, y, nn_hdim, num_passes=20000, print_loss=False):	
+59          num_examples = len(X)
+60          np.random.seed(0)
+61          W1 = np.random.randn(Config.nn_input_dim, nn_hdim) / \
+62          np.sqrt(Config.nn_input_dim)
+63          b1 = np.zeros((1, nn_hdim))
+64          W2 = np.random.randn(nn_hdim, Config.nn_output_dim) / \
+65                np.sqrt(nn_hdim)
+66          b2 = np.zeros((1, Config.nn_output_dim))
+67   
+68          model = {}	# 最后返回的模型，主要就是每一层的参数向量
+69   
+70          for i in range(0, num_passes):	#梯度下降法
+71             # 正向传播过程
+72             z1 = X.dot(W1) + b1
+73             a1 = np.tanh(z1)
+74             z2 = a1.dot(W2) + b2
+75             exp_scores = np.exp(z2)
+76             probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+77          # 误差反向传播过程
+78          delta3 = probs
+79          delta3[range(num_examples), y] -= 1
+80          dW2 = (a1.T).dot(delta3)
+81          db2 = np.sum(delta3, axis=0, keepdims=True)
+82          delta2 = delta3.dot(W2.T) * (1 - np.power(a1, 2))
+83          dW1 = np.dot(X.T, delta2)
+84          db1 = np.sum(delta2, axis=0)
+85          # 添加正则项 (b1 and b2 不需要做正则化)
+86          dW2 += Config.reg_lambda * W2
+87          dW1 += Config.reg_lambda * W1
+88   	     # 梯度下降参数更新
+89          W1 += -Config.epsilon * dW1
+90          b1 += -Config.epsilon * db1
+91          W2 += -Config.epsilon * dW2
+92          b2 += -Config.epsilon * db2
+93          model = {'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}	# 更新模型参数
+94          return model
+95   
+96      def main():
+97          X, y = generate_data()
+98          model = build_model(X, y, 3)
+99          visualize(X, y, model)
+100         if__name__ == "__main__":
+101            main()

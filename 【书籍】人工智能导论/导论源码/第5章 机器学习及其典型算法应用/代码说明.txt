@@ -1,0 +1,9 @@
+已在sklearn(0.19.1),numpy(1.12.1),matplotlib(2.0.2)上全部验证。
+若运行过程中出现警告或者错误，请检查是否是版本问题，查看版本代码如下：
+import numpy
+import sklearn
+import matplotlib
+print sklearn.__version__
+print numpy.__version__
+print matplotlib.__version__
+

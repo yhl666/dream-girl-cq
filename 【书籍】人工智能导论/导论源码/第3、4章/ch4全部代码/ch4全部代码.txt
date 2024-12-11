@@ -1,0 +1,773 @@
+#ch4-1_CrawInformationofBook
+from lxml import etree
+import requests
+import csv
+fp = open('d://ch4_demo/book.csv','wt',newline='',encoding='utf-8')
+writer = csv.writer(fp)
+writer.writerow(('name', 'url',  'author', 'publisher', 'date', 'price', 'rate', 'comment'))
+urls = ['https://book.douban.com/top250?start={}'.format(str(i)) for i in range(0,250,25)]
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
+}
+for url in urls:
+    html = requests.get(url,headers=headers)
+    selector = etree.HTML(html.text)
+    infos = selector.xpath('//tr[@class="item"]')
+    for info in infos:
+        name = info.xpath('td/div/a/@title')[0]
+        url = info.xpath('td/div/a/@href')[0]
+        book_infos = info.xpath('td/p/text()')[0]
+        author = book_infos.split('/')[0]
+        publisher = book_infos.split('/')[-3]
+        date = book_infos.split('/')[-2]
+        price = book_infos.split('/')[-1]
+        rate = info.xpath('td/div/span[2]/text()')[0]
+        comment = comments[0] if len(comments) != 0 else "空"
+        writer.writerow((name,url,author,publisher,date,price,rate,comment))
+fp.close()
+
+
+
+#CH4-2_CrawlInformationofBook
+import requests
+import re
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'
+}
+f = open('d:/ch4_demo/text1.txt','a+')
+def get_info(url):
+    res = requests.get(url,headers=headers)
+    if res.status_code == 200:
+        contents = re.findall('<p>(.*?)</p>',res.content.decode('utf-8'),re.S)
+        for content in contents:
+            f.write(content+'\n')
+        else:
+            pass
+        if __name__ == '__main__':
+            urls = ['http://www.doupoxs.com/doupocangqiong/{}.html'.format(str(i)) for i in range(2,1665)]
+            for url in urls:
+                get_info(url)
+f.close()
+
+
+
+#ch4-3_CrawlInformationofSoup
+from bs4 import BeautifulSoup
+import requests
+import time
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+}
+def judgment_sex(class_name):
+    if class_name == ['member_ico1']:
+        return '女'
+    else:
+        return  '男'
+def get_links(url):
+    wb_data = requests.get(url,headers=headers)
+    soup = BeautifulSoup(wb_data.text,'lxml')
+    links = soup.select('#page_list > ul > li > a')
+    for link in links:
+        href = link.get("href")
+        get_info(href)
+def get_info(url):
+    wb_data = requests.get(url,headers=headers)
+    soup = BeautifulSoup(wb_data.text,'lxml')
+    tittles = soup.select('div.pho_info > h4')
+    addresses = soup.select('span.pr5')
+    prices = soup.select('#pricePart > div.day_l > span')
+    imgs = soup.select('#floatRightBox > div.js_box.clearfix > div.member_pic > a > img')
+    names = soup.select('#floatRightBox > div.js_box.clearfix > div.w_240 > h6 > a')
+    sexs = soup.select('#floatRightBox > div.js_box.clearfix > div.member_pic > div')
+    for tittle, address, price, img, name, sex in zip(tittles,addresses,prices,imgs,names,sexs):
+        data = {
+             'tittle':tittle.get_text().strip(),
+             'address':address.get_text().strip(),
+             'price':price.get_text(),
+             'img':img.get("src"),
+             'name':name.get_text(),
+             'sex':judgment_sex(sex.get("class"))
+            }
+        print(data)
+if __name__ == '__main__':
+    urls = ['http://bj.xiaozhu.com/search-duanzufang-p{}-0/'.format(number) for number in range(1,14)]
+    for single_url in urls:
+        get_links(single_url)
+        time.sleep(2)
+
+
+
+#CH4-4_CrawlPicture
+import re
+import requests
+import os
+name = input('输入文件夹名称:')
+robot = 'd:/' + name + '/'
+kv = {'user-agent': 'mozilla/5.0'}
+def getHTMLText(url):
+    try:
+        r = requests.get(url, timeout=30, headers=kv)
+        r.raise_for_status()
+        r.encoding = r.apparent_encoding
+        return r.text
+    except:
+        return ''
+def parserHTML(html):
+    pattern = r'"ObjURL":"(.*?)"'
+    reg = re.compile(pattern)
+    urls = re.findall(reg, html)
+    return urls
+def download(List):
+    for url in List:
+        try:
+            path = robot + url.split('/')[-1]
+            url = url.replace('\\', '')
+            r = requests.get(url, timeout=30)
+            r.raise_for_status()
+            r.encoding = r.apparent_encoding
+            if not os.path.exists(robot):
+                os.makedirs(robot)
+                if not os.path.exists(path):
+                    with open(path, 'wb') as f:
+                        f.write(r.content)
+                        f.close()
+                        print(path + ' 文件保存成功')
+                else:
+                     print('文件已经存在')
+        except:
+            continue
+def getmoreurl(num, word):
+    ur = []
+    url = r'http://image.baidu.com/search/acjson?tn=resultjson_com&ipn=rj&ct=201326592&is=&fp=result&queryWord={word}&cl=2&lm=-1&ie=utf-8&oe=utf-8&adpicid=&st=-1&z=&ic=0&word={word}&s=&se=&tab=&width=&height=&face=0&istype=2&qc=&nc=1&fr=&cg=girl&pn={pn}&rn=30'
+    for x in range(1, num + 1):
+        u = url.format(word=word, pn=30 * x)
+        ur.append(u)
+    return ur
+def main():
+    n = int(input('输入想下载多少张图片(n*30)：'))
+    word = input('输入想下载的图片:')
+    url = 'http://image.baidu.com/search/index?tn=baiduimage&ipn=r&ct=201326592&cl=2&lm=-1&st=-1&fm=result&fr=&sf=1&fmq=1499773676062_R&pv=&ic=0&nc=1&z=&se=1&showtab=0&fb=0&width=&height=&face=0&istype=2&ie=utf-8&word={word}'.format(
+          word=word)
+    html = getHTMLText(url)
+    urls = parserHTML(html)
+    download(urls)
+    url1 = getmoreurl(n, word)
+    for i in range(n):
+        html1 = getHTMLText(url1[i])
+        urls1 = parserHTML(html1)
+        download(urls1)
+main()
+
+
+
+#CH4-5_StatisticsWordsofFile
+import re   
+f=open('d:/ch4_demo/test1.txt')
+source=f.read()
+f.close()
+r='hello'
+s=len(re.findall(r,source))
+print(s)
+
+
+#CH4-6_ReplaceWordofFile
+import re
+f1 = open('d:/ch4_demo/test1.txt')
+f2 = open('d:/ch4_demo/test1_out.txt','r+')
+for s in f1.readlines():
+    f2.write(s.replace('hello','hi'))
+f1.close()
+f2.close()
+
+
+#CH4-7_SortofText
+f = open('d:/ch4_demo/test2.txt')
+result = list()
+for line in f.readlines():               
+    line = line.strip()               
+    if not len(line) or line.startswith('#'): 
+        continue                 
+    result.append(line)             
+result.sort()                      
+print(result)
+open('d:/ch4_demo/test2_out.txt','w').write('%s' % '\n'.join(result)) 
+
+
+#CH4-8_CheckMissingofData
+import pandas  
+string_data=Series(['abcd','efgh','ijkl','mnop'])
+print(string_data)
+print("...........\n")
+print(string_data.isnull())
+
+
+#CH4-9_ValueofFill
+from pandas import Series,DataFrame, np
+from numpy import nan as NA
+data=DataFrame(np.random.randn(7,3))
+data.ix[:4,1]=NA
+data.ix[:2,2]=NA
+print(data)
+print("...........")
+print(data.fillna(1))
+
+
+
+#CH4-10_FillValueofColumns
+from pandas import Series,DataFrame, np
+from numpy import nan as NA
+data=DataFrame(np.random.randn(7,3))
+data.ix[:4,1]=NA
+data.ix[:2,2]=NA
+print(data)
+print("...........")
+print(data.fillna({1:111,2:222}))
+
+
+
+#CH4-11_ComplementofAverage
+from pandas import Series,DataFrame, np
+from numpy import nan as NA
+data=Series([1.0,NA,3.5,NA,7])
+print(data)
+print("...........\n")
+print(data.fillna(data.mean()))
+
+
+
+#CH4-12_JudgeRepleateofData
+from pandas import Series,DataFrame, np
+from numpy import nan as NA
+import pandas as pd
+import numpy as np
+data=pd.DataFrame({'k1':['one']*3+['two']*4, 'k2':[1,1,2,2,3,3,4]})
+print(data)
+print("........\n")
+print(data.duplicated())
+
+
+#CH4-13_RemoveDataofDuplicate
+from pandas import Series,DataFrame, np
+from numpy import nan as NA
+import pandas as pd
+import numpy as np
+data=pd.DataFrame({'k1':['one']*3+['two']*4, 'k2':[1,1,2,2,3,3,4]})
+print(data)
+print("........\n")
+print(data.drop_duplicates())
+
+
+
+#CH4-14_ReadFileofCSV
+import csv
+import sys
+input_file = 'd:/ch4_demo/supplier_data.csv'
+output_file = 'd:/ch4_demo/supplier_data1.csv'
+with open(input_file, 'r', newline='') as filereader:
+    with open(output_file, 'w', newline='') as filewriter:
+        header = filereader.readline()
+        header = header.strip()
+        header_list = header.split(',')
+        print(header_list)
+        filewriter.write(','.join(map(str,header_list))+'\n')
+        for row in filereader:
+            row = row.strip()
+            row_list = row.split(',')
+            print(row_list)
+       	    filewriter.write(','.join(map(str,row_list))+'\n')
+
+
+
+#CH4-15_ScreenLines
+import csv
+import sys
+input_file = 'd:/ch4_demo/supplier_data.csv'
+output_file = 'd:/ch4_demo/supplier_data2.csv'
+with open(input_file, 'r', newline='') as csv_in_file:
+    with open(output_file, 'w', newline='') as csv_out_file:
+        filereader = csv.reader(csv_in_file)
+        filewriter = csv.writer(csv_out_file)
+        header = next(filereader)
+        filewriter.writerow(header)
+        for row_list in filereader:
+            supplier = str(row_list[0]).strip()
+            cost = str(row_list[3]).strip('$').replace(',', '')
+            if supplier == 'Supplier Z' or float(cost) > 600.0:
+                filewriter.writerow(row_list)
+
+ 
+#CH4-16_ScreenLinesofConditions
+import csv
+import sys
+import re
+input_file = 'd:/ch4_demo/supplier_data.csv'
+output_file = 'd:/ch4_demo/supplier_data3.csv'
+pattern = re.compile(r'(001-.*)')
+with open(input_file, 'r', newline='') as csv_in_file:
+    with open(output_file, 'w', newline='') as csv_out_file:
+        filereader = csv.reader(csv_in_file)
+        filewriter = csv.writer(csv_out_file)
+        header = next(filereader)
+        filewriter.writerow(header)
+        for row_list in filereader:
+            invoice_number = row_list[1]
+            if pattern.search(invoice_number):
+                filewriter.writerow(row_list)
+
+
+#CH4-17_CountNumbersofRanks
+import csv
+import glob
+import os
+import string
+import sys
+pa="d:/ch4_demo"
+file_counter = 0
+for input_file in glob.glob(os.path.join(pa,'sales_*')):
+    row_counter = 1
+    with open(input_file, 'r', newline='') as csv_in_file:
+        filereader = csv.reader(csv_in_file)
+        header = next(filereader)
+        for row in filereader:
+            row_counter += 1
+    print('{0!s}: \t{1:d} rows \t{2:d} columns'.format(\
+    os.path.basename(input_file), row_counter, len(header)))
+    file_counter += 1
+print('Number of files: {0:d}'.format(file_counter))
+
+
+#CH4-18_StatisticsFileofCSV
+import csv
+import glob
+import os
+import string
+import sys
+input_path = "d:/ch4_demo/csv"
+output_file ="d:/ch4_demo/csv/output.csv"
+output_header_list = ['file_name', 'total_sales', 'average_sales']
+csv_out_file = open(output_file, 'a', newline='')
+filewriter = csv.writer(csv_out_file)
+filewriter.writerow(output_header_list)
+for input_file in glob.glob(os.path.join(input_path,'sales_*')):
+    with open(input_file, 'r', newline='') as csv_in_file:
+        filereader = csv.reader(csv_in_file)
+        output_list = [ ]
+        output_list.append(os.path.basename(input_file))
+        header = next(filereader)
+        total_sales = 0.0
+        number_of_sales = 0.0
+        for row in filereader:
+            sale_amount = row[3]
+            total_sales += float(str(sale_amount).strip('$').replace(',',''))
+            number_of_sales += 1.0
+            average_sales = '{0:.2f}'.format(total_sales / number_of_sales)
+            output_list.append(total_sales)
+            output_list.append(average_sales)
+            filewriter.writerow(output_list)
+csv_out_file.close()
+
+
+#CH4-19_ViewInformationofWorkbook
+import sys
+from xlrd import open_workbook
+input_file = "d:\ch4_demo\excel\sales_2013.xlsx"
+workbook = open_workbook(input_file)
+print('Number of worksheets:', workbook.nsheets)
+for worksheet in workbook.sheets():
+    print("Worksheet name:", worksheet.name, "\tRows:", worksheet.nrows, "\tColumns:", worksheet.ncols)
+
+
+#CH4-20_ScreenRecords
+import sys
+from datetime import date
+from xlrd import open_workbook, xldate_as_tuple
+from xlwt import Workbook
+input_file = "d:\ch4_demo\excel\sales_2013.xlsx"
+output_file = "d:\ch4_demo\excel\output1.xlsx"
+output_workbook = Workbook()
+output_worksheet = output_workbook.add_sheet('jan_2013_output')
+sale_amount_column_index = 3
+with open_workbook(input_file) as workbook:
+    worksheet = workbook.sheet_by_name('january_2013')
+    data = []
+    header = worksheet.row_values(0)
+    data.append(header)
+    for row_index in range(1,worksheet.nrows):
+        row_list = []
+        sale_amount = worksheet.cell_value(row_index, sale_amount_column_index)
+        if sale_amount > 1400.0  and  sale_amount < 1500.0 :
+            for column_index in range(worksheet.ncols):
+                cell_value = worksheet.cell_value(row_index,column_index)
+                cell_type = worksheet.cell_type(row_index, column_index)
+                if cell_type == 3:
+                    date_cell = xldate_as_tuple(cell_value,workbook.datemode)
+                    date_cell = date(*date_cell[0:3]).strftime('%m/%d/%Y')
+                    row_list.append(date_cell)
+                else:
+                    row_list.append(cell_value)
+        if row_list:
+            data.append(row_list)
+    for list_index, output_list in enumerate(data):
+        for element_index, element in enumerate(output_list):
+            output_worksheet.write(list_index, element_index, element)
+output_workbook.save(output_file)
+
+
+#CH4-21_ProcessWorksheets
+import sys
+from datetime import date
+from xlrd import open_workbook, xldate_as_tuple
+from xlwt import Workbook
+input_file = "d:\ch4_demo\excel\sales_2013.xlsx"
+output_file = "d:\ch4_demo\excel\output2.xlsx"
+output_workbook = Workbook()
+output_worksheet = output_workbook.add_sheet('set_of_worksheets')
+my_sheets = [0,1]
+threshold = 1900.0
+sales_column_index = 3
+first_worksheet = True
+with open_workbook(input_file) as workbook:
+    data = []
+    for sheet_index in range(workbook.nsheets):
+        if sheet_index in my_sheets:
+            worksheet = workbook.sheet_by_index(sheet_index)
+            if first_worksheet:
+                header_row = worksheet.row_values(0)
+                data.append(header_row)
+                first_worksheet = False
+            for row_index in range(1,worksheet.nrows):
+                row_list = []
+                sale_amount = worksheet.cell_value(row_index, sales_column_index)
+                if sale_amount > threshold:
+                    for column_index in range(worksheet.ncols):
+                        cell_value = worksheet.cell_value(row_index,column_index)
+                        cell_type = worksheet.cell_type(row_index, column_index)
+                        if cell_type == 3:
+                            date_cell = xldate_as_tuple(cell_value,workbook.datemode)
+                            date_cell = date(*date_cell[0:3]).strftime('%m/%d/%Y')
+                            row_list.append(date_cell)
+                        else:
+                            row_list.append(cell_value)
+                if row_list:
+                    data.append(row_list)
+    for list_index, output_list in enumerate(data):
+        for element_index, element in enumerate(output_list):
+            output_worksheet.write(list_index, element_index, element)
+output_workbook.save(output_file)
+
+
+#CH4-22_ProcessWorkbooks
+import glob
+import os
+import sys
+from datetime import date
+from xlrd import open_workbook, xldate_as_tuple
+from xlwt import Workbook
+input_folder = "d:\ch4_demo\excel"
+output_file = "d:\ch4_demo\excel\output3.xlsx"
+output_workbook = Workbook()
+output_worksheet = output_workbook.add_sheet('sums_and_averages')
+all_data = []
+sales_column_index = 3
+header = ['workbook', 'worksheet', 'worksheet_total', 'worksheet_average',  'workbook_total', 'workbook_average']
+all_data.append(header)
+for input_file in glob.glob(os.path.join(input_folder, '*.xls*')):
+    with open_workbook(input_file) as workbook:
+        list_of_totals = []
+        list_of_numbers = []
+        workbook_output = []
+        for worksheet in workbook.sheets():
+            total_sales = 0
+            number_of_sales = 0
+            worksheet_list = []
+            worksheet_list.append(os.path.basename(input_file))
+            worksheet_list.append(worksheet.name)
+            for row_index in range(1, worksheet.nrows):
+                try:
+                    total_sales += float(str(worksheet.cell_value(row_index, sales_column_index)).strip('$').replace(',', ''))
+                    number_of_sales += 1.
+                except:
+                    total_sales += 0.
+                    number_of_sales += 0.
+            average_sales = '%.2f' % (total_sales / number_of_sales)
+            worksheet_list.append(total_sales)
+            worksheet_list.append(float(average_sales))
+            list_of_totals.append(total_sales)
+            list_of_numbers.append(float(number_of_sales))
+            workbook_output.append(worksheet_list)
+            workbook_total = sum(list_of_totals)
+            workbook_average = sum(list_of_totals) / sum(list_of_numbers)
+        for list_element in workbook_output:
+            list_element.append(workbook_total)
+            list_element.append(workbook_average)
+        all_data.extend(workbook_output)
+for list_index, output_list in enumerate(all_data):
+    for element_index, element in enumerate(output_list):
+        output_worksheet.write(list_index, element_index, element)
+output_workbook.save(output_file)
+
+
+#CH4-23_CreateDatabaseandTable
+import sqlite3
+con = sqlite3.connect(':memory:')
+query = """CREATE TABLE sales(customer VARCHAR(20), product VARCHAR(40), amount 	FLOAT, date DATE);"""
+con.execute(query)
+con.commit()
+data = [('Richard Lucas', 'Notepad', 2.50, '2014-01-02'),('Jenny Kim', 'Binder', 4.15, '2014-01-15'),('Svetlana Crow', 'Printer', 155.75, '2014-02-03'),('Stephen Randolph','Computer', 679.40, '2014-02-20')]
+statement = "INSERT INTO sales VALUES(?, ?, ?, ?)"
+con.executemany(statement, data)
+con.commit()
+cursor = con.execute("SELECT * FROM sales")
+rows = cursor.fetchall()
+row_counter = 0
+for row in rows:
+    print(row)
+    row_counter += 1
+print('Number of rows: {}'.format(row_counter))
+
+
+#CH4-24_InsertRecord
+import os
+import csv
+import sqlite3
+import sys
+input_file = "d:\ch4_demo\database\supplier_data.csv"
+con = sqlite3.connect('d:\ch4_demo\database\suppliers.db')
+c = con.cursor()
+create_table = """CREATE TABLE IF NOT EXISTS Suppliers
+        (Supplier_Name VARCHAR(20), 
+        Invoice_Number VARCHAR(20),
+        Part_Number VARCHAR(20),
+        Cost FLOAT,
+        Purchase_Date DATE);"""
+c.execute(create_table)
+con.commit()
+file_reader = csv.reader(open(input_file, 'r'), delimiter=',')
+header = next(file_reader, None)
+for row in file_reader:
+    data = []
+    for column_index in range(len(header)):
+        data.append(row[column_index])
+    print(data)
+    c.execute("INSERT INTO Suppliers VALUES (?, ?, ?, ?, ?);", data)
+con.commit()
+output = c.execute("SELECT * FROM Suppliers")
+rows = output.fetchall()
+for row in rows:
+    output = []
+    for column_index in range(len(row)):
+        output.append(str(row[column_index]))
+    print(output)
+
+#CH4-25_DisplayBargraph
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+month = ['一月', '二月', '三月', '四月', '五月']
+sale_amounts = [27, 90, 20, 111, 23]
+month_index = range(len(month))
+fig = plt.figure()
+ax1 = fig.add_subplot(1,1,1)
+ax1.bar(month_index, sale_amounts, align='center', color='darkblue')
+plt.xticks(month_index, month, rotation=0, fontsize='small')
+plt.xlabel('月份')
+plt.ylabel('销售额')
+plt.title('每个月的销售额')
+plt.show()
+
+
+#CH4-26_MatplotlibScatterplot
+from numpy.random import randn
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+plot_data1 = randn(50).cumsum()
+plot_data2 = randn(50).cumsum()
+plot_data3 = randn(50).cumsum()
+plot_data4 = randn(50).cumsum()
+fig = plt.figure()
+ax1 = fig.add_subplot(1,1,1)
+ax1.plot(plot_data1, marker=r'o', color=u'blue', linestyle='-', label='Blue Solid')
+ax1.plot(plot_data2, marker=r'+', color=u'red', linestyle='--', label='Red Dashed')
+ax1.plot(plot_data3, marker=r'*', color=u'green', linestyle='-.', label='Green Dash Dot')
+ax1.plot(plot_data4, marker=r's', color=u'orange', linestyle=':', label='Orange Dotted')
+ax1.xaxis.set_ticks_position('bottom')
+ax1.yaxis.set_ticks_position('left')
+ax1.set_title('各类风格的折线图')
+plt.xlabel('图形')
+plt.ylabel('值')
+plt.legend(loc='best')
+plt.show()
+
+
+#CH4-27_PandasChart
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+fig, axes = plt.subplots(nrows=1, ncols=2)
+ax1, ax2 = axes.ravel()
+data_frame = pd.DataFrame(np.random.rand(5, 3),index=['C1', 'C2', 'C3', 'C4', 'C5'],columns=pd.Index(['M1', 'M2', 'M3'], name='Metrics'))
+data_frame.plot(kind='bar', ax=ax1, alpha=0.75, title='Bar Plot')
+plt.setp(ax1.get_xticklabels(), rotation=0, fontsize=10)
+plt.setp(ax1.get_yticklabels(), rotation=0, fontsize=10)
+ax1.set_xlabel('Customer')
+ax1.set_ylabel('Value')
+ax1.xaxis.set_ticks_position('bottom')
+ax1.yaxis.set_ticks_position('left')
+colors = dict(boxes='DarkBlue', whiskers='Gray', medians='Red', caps='Black')
+data_frame.plot(kind='box', color=colors, sym='r.', ax=ax2, title='Box Plot')
+plt.setp(ax2.get_xticklabels(), rotation=0, fontsize=10)
+plt.setp(ax2.get_yticklabels(), rotation=0, fontsize=10)
+ax2.set_xlabel('Metric')
+ax2.set_ylabel('Value')
+ax2.xaxis.set_ticks_position('bottom')
+plt.show()
+
+
+#CH4-28_SeabornChart
+import seaborn as sns
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+x = np.linspace(0, 2, 100)
+plt.plot(x, x, label='linear')
+plt.plot(x, x**2, label='quadratic')
+plt.plot(x, x**3, label='cubic')
+plt.xlabel('x label')
+plt.ylabel('y label')
+plt.title("Simple Plot")
+plt.legend(loc="best")
+plt.show()
+
+#CH4-29_ImageTransformationofPattern1
+from PIL import Image
+lena =Image.open("D:\ch4_demo\scene.jpg")
+lena.show()
+print(lena.mode)
+print(lena.getpixel((0,0)))
+lena_1 = lena.convert("1")
+print(lena_1.mode)
+print(lena_1.size)
+print(lena_1.getpixel((0,0)))
+print(lena_1.getpixel((10,10)))
+lena_1.show()
+
+
+#CH4-30_ImageformationofPatternL
+from PIL import Image
+lena =Image.open("D:\ch4_demo\scene.jpg")
+lena.show()
+print(lena.mode)
+print(lena.getpixel((0,0)))
+lena_i = lena.convert("I")
+print(lena_i.mode)
+print(lena_i.size)
+print(lena_i.getpixel((0,0)))
+lena_i.show()
+
+
+#CH4-31_SeparationChannelofImage
+import numpy as np
+import matplotlib.pylab as plt
+im = plt.imread("d:\ch4_demo\scene.jpg")
+print(im.shape)
+fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,15))
+for c, ax in zip(range(3), axs):
+    tmp_im = np.zeros(im.shape)
+    tmp_im[:,:,c] = im[:,:,c]
+    one_channel = im[:,:,c].flatten()
+print("channel", c, " max = ", max(one_channel), "min = ", min(one_channel),ax.imshow(tmp_im))
+ax.set_axis_off()
+plt.show()
+
+
+
+#CH4-31_ExtractSizeofImage
+from PIL import Image
+from pylab import *
+im=Image.open("d:\\ch4_demo\scene.jpg")
+im.show()
+box=(500,500,700,700)
+region=im.crop(box)
+region.show()
+region=region.transpose(Image.ROTATE_180)
+region.show()
+im.paste(region,box)
+im.show()
+
+#CH4-32_ExtractSizeofImage
+from PIL import Image
+from pylab import *
+im=Image.open("d:\\ch4_demo\scene.jpg")
+im.show()
+box=(500,500,700,700)
+region=im.crop(box)
+region.show()
+region=region.transpose(Image.ROTATE_180)
+region.show()
+im.paste(region,box)
+im.show()
+
+
+
+
+#CH4-33_TranferofImage
+from PIL import Image
+from pylab import *
+im=Image.open("d:\\ch4_demo\scene.jpg")
+out = im.resize((128, 128))     
+out.show()
+out = im.rotate(45)   
+out.show()
+out = im.transpose(Image.FLIP_LEFT_RIGHT)  
+out.show()
+out = im.transpose(Image.FLIP_TOP_BOTTOM)  
+out.show()
+
+
+#CH4-34_CinerationofImage
+from PIL import Image
+from pylab import *
+im=Image.open("d:\\ch4_demo\scene.jpg")
+im.show()
+from PIL import Image
+from pylab import *
+im = array(Image.open("d:\\ch4_demo\scene.jpg").convert('L'))
+im2 = 255 - im 
+im3 = (100.0/255) * im + 100   
+im4 = 255.0 * (im/255.0)**2
+subplot(221)
+title('f(x) = x')
+gray()
+imshow(im) 
+subplot(222)
+title('f(x) = 255 - x')
+gray()
+imshow(im2)
+subplot(223)
+title('f(x) = (100/255)*x + 100')
+gray()
+imshow(im3)
+subplot(224)
+title('f(x) =255 *(x/255)^2')
+gray()
+imshow(im4)
+print(int(im.min()),int(im.max()))
+print(int(im2.min()),int(im2.max()))
+print(int(im3.min()),int(im3.max()))
+print(int(im4.min()),int(im4.max()))
+show()
+
+#CH4-35_AdjustPixelofImage
+from PIL import Image
+im=Image.open("d:\\ch4_demo\scene.jpg")
+im.show()
+w,h=im.size
+print(w)
+print(h)
+out = im.resize((800,800),Image.ANTIALIAS)
+out.show()
+w1,h1=out.size
+print(w1)
+print(h1)

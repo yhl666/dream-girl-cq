@@ -1,0 +1,73 @@
+1.   import tensorflow as tf  
+2.   from tensorflow.examples.tutorials.mnist import input_data  
+3.	  
+4.   mnist = input_data.read_data_sets('MNIST_data', one_hot=True)  
+5.	  
+6.   sess = tf.InteractiveSession()  
+7.	  
+8.   x = tf.placeholder("float", shape=[None, 784])  #训练数据
+9.   y_ = tf.placeholder("float", shape=[None, 10])  #训练标签数据
+10.	  
+11.  x_image = tf.reshape(x, [-1,28,28,1])
+12.  
+13.  #第一层：卷积层(C1)
+14.  conv1_weights = tf.get_variable("conv1_weights", [5, 5, 1, 32], \
+15.	             initializer=tf.truncated_normal_initializer(stddev=0.1))
+16.  conv1_biases = tf.get_variable("conv1_biases", [32], initializer=tf.constant_initializer(0.0))
+17.  conv1 = tf.nn.conv2d(x_image, conv1_weights, strides=[1, 1, 1, 1], padding='SAME')
+18.  relu1 = tf.nn.relu( tf.nn.bias_add(conv1, conv1_biases) ) 
+19.	 
+20.  #第二层：最大池化层(S1)
+21.  pool1 = tf.nn.max_pool(relu1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+22.	  
+23.  #第三层：卷积层(C2)
+24.  conv2_weights = tf.get_variable("conv2_weights", [5, 5, 32, 64], \
+25.	             initializer=tf.truncated_normal_initializer(stddev=0.1))
+26.  conv2_biases = tf.get_variable("conv2_biases", [64], initializer=tf.constant_initializer(0.0))
+27.  conv2 = tf.nn.conv2d(pool1, conv2_weights, strides=[1, 1, 1, 1], padding='SAME')
+28.  relu2 = tf.nn.relu( tf.nn.bias_add(conv2, conv2_biases) )
+29.	  
+30.  #第四层：最大池化层(S2)
+31.  pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+32.	  
+33.  #第五层：全连接层(n1)
+34.  fc1_weights = tf.get_variable("fc1_weights", [7 * 7 * 64, 1024], \
+35.	          initializer=tf.truncated_normal_initializer(stddev=0.1))
+36.  fc1_baises = tf.get_variable("fc1_baises", [1024], initializer=tf.constant_initializer(0.1))
+37.  pool2_vector = tf.reshape(pool2, [-1, 7 * 7 * 64])
+38.  fc1 = tf.nn.relu(tf.matmul(pool2_vector, fc1_weights) + fc1_baises)
+39.  keep_prob = tf.placeholder(tf.float32)  
+40.  fc1_dropout = tf.nn.dropout(fc1, keep_prob)  #为了减少过拟合，加入Dropout层
+41.	 
+42.  #第六层：全连接层(n2)
+43.  fc2_weights = tf.get_variable("fc2_weights", [1024, 10], \
+44.	          initializer=tf.truncated_normal_initializer(stddev=0.1))
+45.  fc2_biases = tf.get_variable("fc2_biases", [10], initializer=tf.constant_initializer(0.1))
+46.  fc2 = tf.matmul(fc1_dropout, fc2_weights) + fc2_biases
+47.	  
+48.  #第七层：输出层softmax(n2)
+49.  y_conv = tf.nn.softmax(fc2)
+50.	  
+51.  #定义交叉熵损失函数
+52.  cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y_conv), reduction_indices=[1]))
+53.	  
+54.  #选择优化器，并让优化器最小化损失函数/收敛, 反向传播
+55.  train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+56.	  
+57.  correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+58.	  
+59.  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+60.  
+61.  #开始训练
+62.  sess.run(tf.global_variables_initializer())
+63.  for i in range(10000):
+64.	  batch = mnist.train.next_batch(50)
+65.	  if i%50 == 0:
+66.	     train_accuracy = accuracy.eval(feed_dict={x:batch[0], y_: batch[1], keep_prob: 1.0})
+67.	     print("step %d, training accuracy %g" % (i, train_accuracy))
+68.	  train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+69.	      
+70.  #在测试数据上测试准确率
+71.  print("test accuracy %g" % accuracy.eval \
+72.	          (feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+73.	      
